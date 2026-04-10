@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Listing, User } from "@/generated/prisma/client";
+import type { Listing, User } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users } from "lucide-react";
