@@ -1,0 +1,1317 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                   String               @id @default(cuid())
+  email                String               @unique
+  passwordHash         String
+  emailVerifiedAt      DateTime?
+  planId               String?
+  stripeCustomerId     String?
+  status               String               @default("active")
+  isAdmin              Boolean              @default(false)
+  createdAt            DateTime             @default(now())
+  name                 String?
+  countryCode          String?
+  avatarUrl            String?
+  resetToken           String?
+  resetTokenExpiry     DateTime?
+  isSuperAdmin         Boolean              @default(false)
+  backgroundImageUrl   String?
+  birthdate            DateTime?
+  fontColor            String?              @default("#000000")
+  notificationSettings Json?
+  parentalConsentDate  DateTime?
+  parentalConsentEmail String?
+  parentalConsentGiven Boolean              @default(false)
+  customBackgrounds    String?
+  AdminAuditLog        AdminAuditLog[]
+  Album                Album[]
+  Author               Author?
+  BookReview           BookReview[]
+  DynamicQrCode        DynamicQrCode[]
+  IrArtist             IrArtist?
+  Notification         Notification[]
+  QrBundle             QrBundle[]
+  SupportTicket        SupportTicket[]
+  Transaction          Transaction[]
+  UsageCounter         UsageCounter[]
+  Plan                 Plan?                @relation(fields: [planId], references: [id])
+  UserLibrary          UserLibrary[]
+  UserPlatformAccess   UserPlatformAccess[]
+  UserSubscription     UserSubscription[]
+}
+
+model AdminAuditLog {
+  id        String   @id
+  adminId   String
+  action    String
+  targetId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model Album {
+  id               String             @id
+  userId           String
+  title            String
+  slug             String             @unique
+  coverAssetId     String?
+  isPublic         Boolean            @default(true)
+  isFeatured       Boolean            @default(false)
+  category         String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  description      String
+  creatorType      String             @default("USER")
+  isForSale        Boolean            @default(false)
+  licenseType      String?            @default("personal")
+  priceUsd         Decimal?
+  albumType        String             @default("PRIVATE")
+  User             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  AlbumAccessLog   AlbumAccessLog[]
+  AlbumAccessToken AlbumAccessToken[]
+  AlbumLike        AlbumLike[]
+  AlbumOrder       AlbumOrder[]
+  AlbumQrCode      AlbumQrCode[]
+  AlbumTag         AlbumTag[]
+  Asset            Asset[]
+  QrBundle         QrBundle[]
+
+  @@index([albumType])
+  @@index([creatorType])
+  @@index([isForSale])
+  @@index([isPublic])
+  @@index([userId])
+}
+
+model AlbumAccessLog {
+  id           String       @id
+  albumId      String
+  assetId      String?
+  userId       String?
+  qrCodeId     String?
+  shortCode    String?
+  ipAddress    String
+  userAgent    String?
+  referer      String?
+  origin       String?
+  bytesServed  BigInt?
+  accessType   String
+  httpMethod   String       @default("GET")
+  statusCode   Int          @default(200)
+  sessionToken String?
+  accessedAt   DateTime     @default(now())
+  Album        Album        @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  Asset        Asset?       @relation(fields: [assetId], references: [id])
+  AlbumQrCode  AlbumQrCode? @relation(fields: [qrCodeId], references: [id])
+
+  @@index([accessType])
+  @@index([accessedAt])
+  @@index([albumId])
+  @@index([assetId])
+  @@index([ipAddress])
+  @@index([qrCodeId])
+}
+
+model AlbumAccessToken {
+  id          String      @id
+  albumId     String
+  qrCodeId    String
+  token       String      @unique
+  ipAddress   String?
+  userAgent   String?
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+  lastUsedAt  DateTime?
+  useCount    Int         @default(0)
+  isRevoked   Boolean     @default(false)
+  revokedAt   DateTime?
+  Album       Album       @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  AlbumQrCode AlbumQrCode @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+
+  @@index([albumId])
+  @@index([expiresAt])
+  @@index([isRevoked])
+  @@index([qrCodeId])
+  @@index([token])
+}
+
+model AlbumLike {
+  id        String   @id
+  albumId   String
+  userId    String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  Album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId, ipAddress])
+  @@unique([albumId, userId])
+  @@index([albumId])
+  @@index([ipAddress])
+  @@index([userId])
+}
+
+model AlbumOrder {
+  id               String      @id
+  albumId          String
+  buyerEmail       String
+  buyerName        String?
+  amountUsd        Decimal
+  platformFeeUsd   Decimal
+  sellerEarningUsd Decimal
+  status           OrderStatus @default(PENDING)
+  stripeSessionId  String?     @unique
+  paymentIntentId  String?
+  licenseType      String      @default("personal")
+  downloadToken    String?     @unique
+  downloadCount    Int         @default(0)
+  maxDownloads     Int         @default(5)
+  expiresAt        DateTime?
+  lastDownloadAt   DateTime?
+  ipAddresses      String[]    @default([])
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime
+  Album            Album       @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@index([albumId])
+  @@index([buyerEmail])
+  @@index([downloadToken])
+  @@index([status])
+}
+
+model AlbumQrCode {
+  id               String             @id
+  albumId          String
+  shortCode        String             @unique
+  pngS3Key         String
+  svgS3Key         String
+  isRevoked        Boolean            @default(false)
+  revokedAt        DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  isPublicQr       Boolean            @default(false)
+  AlbumAccessLog   AlbumAccessLog[]
+  AlbumAccessToken AlbumAccessToken[]
+  Album            Album              @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@index([albumId])
+  @@index([isPublicQr])
+  @@index([isRevoked])
+  @@index([shortCode])
+}
+
+model AlbumTag {
+  albumId String
+  tagId   String
+  Album   Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  Tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([albumId, tagId])
+}
+
+model ApiKey {
+  id          String    @id
+  name        String
+  key         String    @unique
+  prefix      String
+  platform    String
+  permissions Json?
+  rateLimit   Int       @default(1000)
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  usageCount  Int       @default(0)
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+
+  @@index([isActive])
+  @@index([key])
+  @@index([platform])
+}
+
+model Asset {
+  id             String           @id
+  albumId        String
+  variant        String
+  bytes          Int
+  width          Int
+  height         Int
+  s3Key          String
+  createdAt      DateTime         @default(now())
+  displayOrder   Int              @default(0)
+  isForSale      Boolean          @default(false)
+  priceUsd       Decimal?
+  caption        String?          @db.VarChar(100)
+  groupLabel     String?
+  AlbumAccessLog AlbumAccessLog[]
+  Album          Album            @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  PhotoOrder     PhotoOrder[]
+
+  @@index([albumId])
+}
+
+model Author {
+  id                        String        @id
+  userId                    String        @unique
+  category                  String
+  eMoneyOptIn               Boolean       @default(false)
+  status                    AuthorStatus  @default(PENDING)
+  stripeAccountId           String?
+  stripeChargesEnabled      Boolean       @default(false)
+  termsAcceptedAt           DateTime?
+  termsVersion              String?
+  profileImageUrl           String?
+  bio                       String?
+  reviewNote                String?
+  onboardingBookDescription String?
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime
+  stripeDetailsSubmitted    Boolean       @default(false)
+  notificationSettings      Json?
+  kleverBookEnabled         Boolean?      @default(false)
+  kleverBookAutoConvert     Boolean?      @default(false)
+  User                      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Book                      Book[]
+  Payout                    Payout[]
+  Transaction               Transaction[]
+}
+
+model BlockedIp {
+  id             String    @id
+  ipAddress      String    @unique
+  reason         String
+  description    String?
+  blockCount     Int       @default(1)
+  isActive       Boolean   @default(true)
+  expiresAt      DateTime?
+  firstBlockedAt DateTime  @default(now())
+  lastBlockedAt  DateTime  @default(now())
+  metadata       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+
+  @@index([expiresAt])
+  @@index([ipAddress])
+  @@index([isActive])
+  @@index([lastBlockedAt])
+  @@index([reason])
+}
+
+model Book {
+  id             String          @id
+  authorId       String
+  title          String
+  priceUsd       Decimal
+  status         BookStatus      @default(DRAFT)
+  coverUrl       String?
+  featured       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime
+  description    String?
+  category       String
+  ebookUrl       String?
+  isPrintable    Boolean         @default(false)
+  isbn           String?
+  language       String          @default("English")
+  pageCount      Int?
+  trimSize       String?
+  coverPdfUrl    String?
+  interiorPdfUrl String?
+  Author         Author          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  BookPromotion  BookPromotion[]
+  BookReview     BookReview[]
+  DownloadToken  DownloadToken[]
+  Order          Order[]
+  UserLibrary    UserLibrary[]
+
+  @@index([authorId])
+}
+
+model BookPromotion {
+  id              String    @id
+  bookId          String
+  packageType     String
+  ranking         String
+  amountUsd       Decimal
+  durationDays    Int
+  status          String    @default("PENDING")
+  stripeSessionId String?   @unique
+  paidAt          DateTime?
+  startsAt        DateTime
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+  Book            Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([expiresAt])
+  @@index([status])
+}
+
+model BookReview {
+  id               String        @id
+  bookId           String
+  createdAt        DateTime      @default(now())
+  comment          String
+  rating           Int
+  updatedAt        DateTime
+  userId           String
+  status           String        @default("PENDING")
+  containsSpoilers Boolean       @default(false)
+  helpful          Int           @default(0)
+  recommendBook    Boolean       @default(true)
+  Book             Book          @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  User             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ReviewImage      ReviewImage[]
+  ReviewLike       ReviewLike[]
+  ReviewTag        ReviewTag[]
+
+  @@unique([bookId, userId])
+  @@index([bookId])
+  @@index([status])
+  @@index([userId])
+}
+
+model CsrfToken {
+  id        String    @id
+  userId    String?
+  token     String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
+  isUsed    Boolean   @default(false)
+  ipAddress String?
+  userAgent String?
+
+  @@index([expiresAt])
+  @@index([isUsed])
+  @@index([token])
+  @@index([userId])
+}
+
+model Deployment {
+  id            String    @id
+  platform      String
+  environment   String
+  version       String
+  commitHash    String?
+  commitMessage String?
+  branch        String?
+  status        String    @default("pending")
+  deployedBy    String
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  duration      Int?
+  errorLogs     String?
+  changelog     String?
+  rollbackFrom  String?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+
+  @@index([environment])
+  @@index([platform])
+  @@index([startedAt])
+  @@index([status])
+}
+
+model DownloadToken {
+  id         String    @id
+  bookId     String
+  token      String    @unique
+  expiresAt  DateTime
+  used       Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  buyerEmail String?
+  ipAddress  String?
+  maxUses    Int       @default(5)
+  useCount   Int       @default(0)
+  usedAt     DateTime?
+  orderId    String?
+  Book       Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  Order      Order?    @relation(fields: [orderId], references: [id])
+
+  @@index([bookId])
+  @@index([expiresAt])
+  @@index([orderId])
+  @@index([token])
+}
+
+model DynamicQrCode {
+  id             String    @id
+  name           String
+  shortCode      String    @unique
+  destinationUrl String
+  pngS3Key       String
+  svgS3Key       String?
+  description    String?
+  createdBy      String
+  isActive       Boolean   @default(true)
+  clickCount     Int       @default(0)
+  lastClickedAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+  logoS3Key      String?
+  User           User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([createdBy])
+  @@index([isActive])
+  @@index([shortCode])
+}
+
+model EmailLog {
+  id            String         @id
+  templateId    String?
+  to            String
+  cc            String?
+  bcc           String?
+  subject       String
+  body          String
+  htmlBody      String?
+  platform      String         @default("system")
+  category      String         @default("general")
+  status        String         @default("pending")
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  openedAt      DateTime?
+  clickedAt     DateTime?
+  bouncedAt     DateTime?
+  failedAt      DateTime?
+  errorMessage  String?
+  metadata      Json?
+  senderId      String?
+  recipientId   String?
+  messageId     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime
+  EmailTemplate EmailTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([category])
+  @@index([createdAt])
+  @@index([platform])
+  @@index([recipientId])
+  @@index([senderId])
+  @@index([status])
+  @@index([to])
+}
+
+model EmailQueue {
+  id            String    @id
+  to            String
+  cc            String?
+  bcc           String?
+  subject       String
+  body          String
+  htmlBody      String?
+  templateId    String?
+  platform      String    @default("system")
+  priority      Int       @default(5)
+  scheduledAt   DateTime?
+  attempts      Int       @default(0)
+  maxAttempts   Int       @default(3)
+  lastAttemptAt DateTime?
+  status        String    @default("queued")
+  errorMessage  String?
+  metadata      Json?
+  createdBy     String?
+  createdAt     DateTime  @default(now())
+
+  @@index([priority])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model EmailTemplate {
+  id        String     @id
+  name      String     @unique
+  subject   String
+  body      String
+  htmlBody  String?
+  category  String     @default("general")
+  platform  String     @default("all")
+  variables Json?
+  isActive  Boolean    @default(true)
+  createdBy String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  EmailLog  EmailLog[]
+
+  @@index([category])
+  @@index([isActive])
+  @@index([platform])
+}
+
+model Invitation {
+  id             String    @id
+  email          String
+  name           String?
+  token          String    @unique
+  platforms      String[]
+  role           String    @default("user")
+  accountType    String    @default("user")
+  permissions    Json?
+  message        String?
+  status         String    @default("pending")
+  sentAt         DateTime?
+  viewedAt       DateTime?
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  expiresAt      DateTime
+  invitedBy      String
+  inviterName    String?
+  inviterEmail   String?
+  acceptedUserId String?
+  resendCount    Int       @default(0)
+  lastResendAt   DateTime?
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+
+  @@index([email])
+  @@index([expiresAt])
+  @@index([invitedBy])
+  @@index([status])
+  @@index([token])
+}
+
+model InvitationHistory {
+  id           String   @id
+  invitationId String
+  action       String
+  performedBy  String?
+  ipAddress    String?
+  userAgent    String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([invitationId])
+}
+
+model IrAlbum {
+  id           String         @id
+  artistId     String
+  title        String
+  coverUrl     String?
+  genre        String?
+  year         String?
+  description  String?
+  cdPrice      Decimal?
+  vinylPrice   Decimal?
+  digitalPrice Decimal?
+  featured     Boolean        @default(false)
+  status       String         @default("PUBLISHED")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime
+  IrArtist     IrArtist       @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  IrMusicOrder IrMusicOrder[]
+  IrSong       IrSong[]
+
+  @@index([artistId])
+  @@index([createdAt])
+  @@index([featured])
+  @@index([genre])
+  @@index([status, artistId])
+  @@index([status])
+}
+
+model IrArtist {
+  id              String    @id
+  userId          String?   @unique
+  name            String
+  email           String?
+  bio             String?
+  imageUrl        String?
+  genre           String?
+  status          String    @default("ACTIVE")
+  stripeAccountId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+  IrAlbum         IrAlbum[]
+  User            User?     @relation(fields: [userId], references: [id])
+
+  @@index([name])
+  @@index([userId])
+}
+
+model IrMusicOrder {
+  id              String    @id
+  buyerEmail      String
+  buyerName       String?
+  productType     String
+  albumId         String?
+  songId          String?
+  amountUsd       Decimal
+  status          String    @default("PENDING")
+  stripeSessionId String?   @unique
+  paymentIntentId String?
+  shippingName    String?
+  shippingAddress String?
+  shippingCity    String?
+  shippingState   String?
+  shippingZip     String?
+  shippingCountry String?   @default("US")
+  trackingNumber  String?
+  downloadToken   String?   @unique
+  downloadCount   Int       @default(0)
+  maxDownloads    Int       @default(5)
+  downloadExpires DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+  IrAlbum         IrAlbum?  @relation(fields: [albumId], references: [id])
+  IrSong          IrSong?   @relation(fields: [songId], references: [id])
+
+  @@index([albumId])
+  @@index([albumId, status])
+  @@index([buyerEmail])
+  @@index([createdAt])
+  @@index([productType])
+  @@index([status])
+  @@index([stripeSessionId])
+}
+
+model IrSong {
+  id           String         @id
+  albumId      String
+  title        String
+  trackNum     Int
+  duration     Int?
+  fileUrl      String?
+  previewUrl   String?
+  price        Decimal        @default(0.99)
+  createdAt    DateTime       @default(now())
+  IrMusicOrder IrMusicOrder[]
+  IrAlbum      IrAlbum        @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@index([albumId])
+  @@index([albumId, trackNum])
+}
+
+model LuluOrder {
+  id             String   @id
+  orderId        String   @unique
+  luluOrderId    String?
+  shippingMethod String
+  luluTotalCost  Decimal
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  status         String?
+  trackingNumber String?
+  trackingUrl    String?
+  Order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([luluOrderId])
+}
+
+model Nadica_ChatMessages {
+  id                   String               @id
+  conversationId       String
+  userId               String
+  role                 String
+  content              String
+  createdAt            DateTime             @default(now())
+  Nadica_Conversations Nadica_Conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  Nadica_Users         Nadica_Users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@index([role])
+  @@index([userId])
+  @@map("Nadica-ChatMessages")
+}
+
+model Nadica_Conversations {
+  id                  String                @id
+  userId              String
+  title               String                @default("New Conversation")
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  Nadica_ChatMessages Nadica_ChatMessages[]
+  Nadica_Users        Nadica_Users          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("Nadica-Conversations")
+}
+
+model Nadica_Documents {
+  id         String   @id
+  title      String
+  fileName   String
+  fileType   String
+  fileSize   Int      @default(0)
+  s3Key      String?
+  content    String?
+  status     String   @default("active")
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+
+  @@index([createdAt])
+  @@index([status])
+  @@map("Nadica-Documents")
+}
+
+model Nadica_Users {
+  id                   String                 @id
+  email                String                 @unique
+  hashedPassword       String
+  name                 String?
+  role                 String                 @default("user")
+  status               String                 @default("pending")
+  lastLogin            DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime
+  Nadica_ChatMessages  Nadica_ChatMessages[]
+  Nadica_Conversations Nadica_Conversations[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("Nadica-Users")
+}
+
+model Notification {
+  id          String   @id
+  userId      String
+  type        String
+  title       String
+  description String?
+  icon        String?
+  read        Boolean  @default(false)
+  link        String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([read])
+  @@index([userId])
+}
+
+model Order {
+  id              String           @id
+  bookId          String
+  buyerEmail      String
+  amountUsd       Decimal
+  status          OrderStatus      @default(PENDING)
+  stripeSessionId String?          @unique
+  downloadTokenId String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime
+  deliveryMethod  String?          @default("digital")
+  luluJobId       String?
+  shippingAddress Json?
+  trackingNumber  String?
+  notes           String?
+  paymentIntentId String?
+  DownloadToken   DownloadToken[]
+  LuluOrder       LuluOrder?
+  Book            Book             @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  PayoutOverride  PayoutOverride[]
+  UserLibrary     UserLibrary[]
+
+  @@index([buyerEmail])
+  @@index([createdAt])
+  @@index([status])
+  @@index([stripeSessionId])
+}
+
+model Payout {
+  id             String   @id
+  authorId       String
+  amountUsd      Decimal
+  status         String   @default("PENDING")
+  stripePayoutId String?  @unique
+  periodStart    DateTime
+  periodEnd      DateTime
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  Author         Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+model PayoutOverride {
+  id        String   @id
+  orderId   String
+  note      String
+  amountUsd Decimal
+  createdAt DateTime @default(now())
+  Order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model PhotoOrder {
+  id               String      @id
+  assetId          String
+  buyerEmail       String
+  buyerName        String?
+  amountUsd        Decimal
+  platformFeeUsd   Decimal
+  sellerEarningUsd Decimal
+  status           OrderStatus @default(PENDING)
+  stripeSessionId  String?     @unique
+  paymentIntentId  String?
+  licenseType      String      @default("personal")
+  downloadToken    String?     @unique
+  downloadCount    Int         @default(0)
+  maxDownloads     Int         @default(3)
+  expiresAt        DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime
+  Asset            Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@index([buyerEmail])
+  @@index([status])
+}
+
+model Pj_index_Books {
+  id                      String                    @id
+  slug                    String                    @unique
+  title                   String
+  subtitle                String?
+  coverImage              String
+  pdfPath                 String?
+  price                   Decimal?                  @db.Decimal(10, 2)
+  description             String?
+  author                  String
+  isComingSoon            Boolean                   @default(false)
+  sampleUrl               String?
+  viewUrl                 String?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  Pj_index_DownloadTokens Pj_index_DownloadTokens[]
+  Pj_index_Orders         Pj_index_Orders[]
+
+  @@map("Pj-index-Books")
+}
+
+model Pj_index_DownloadTokens {
+  id              String          @id
+  bookId          String
+  orderId         String          @unique
+  token           String          @unique
+  expiresAt       DateTime
+  buyerEmail      String
+  used            Boolean         @default(false)
+  usedAt          DateTime?
+  createdAt       DateTime        @default(now())
+  downloadCount   Int             @default(0)
+  Pj_index_Books  Pj_index_Books  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  Pj_index_Orders Pj_index_Orders @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([buyerEmail])
+  @@index([orderId])
+  @@index([token])
+  @@map("Pj-index-DownloadTokens")
+}
+
+model Pj_index_EmailNotifications {
+  id          String    @id
+  email       String
+  bookSlug    String
+  confirmed   Boolean   @default(false)
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([email, bookSlug])
+  @@index([bookSlug])
+  @@index([confirmed])
+  @@index([email])
+  @@map("Pj-index-EmailNotifications")
+}
+
+model Pj_index_Orders {
+  id                      String                   @id
+  stripeSessionId         String                   @unique
+  stripePaymentIntentId   String?
+  customerEmail           String
+  customerName            String?
+  customerPhone           String?
+  shippingName            String
+  shippingLine1           String
+  shippingLine2           String?
+  shippingCity            String
+  shippingState           String?
+  shippingPostalCode      String
+  shippingCountry         String
+  shippingLevel           String
+  shippingCost            Decimal                  @db.Decimal(10, 2)
+  bookPrice               Decimal                  @db.Decimal(10, 2)
+  quantity                Int                      @default(1)
+  tax                     Decimal                  @default(0) @db.Decimal(10, 2)
+  total                   Decimal                  @db.Decimal(10, 2)
+  status                  String                   @default("payment_received")
+  paymentStatus           String                   @default("pending")
+  luluPrintJobId          String?
+  trackingNumber          String?
+  carrier                 String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime
+  shippedAt               DateTime?
+  error                   String?
+  bookId                  String?
+  productType             String                   @default("physical")
+  Pj_index_DownloadTokens Pj_index_DownloadTokens?
+  Pj_index_Books          Pj_index_Books?          @relation(fields: [bookId], references: [id])
+
+  @@index([bookId])
+  @@index([createdAt])
+  @@index([customerEmail])
+  @@index([status])
+  @@map("Pj-index-Orders")
+}
+
+model PjIndexArticle {
+  id               String           @id
+  directoryId      String
+  name             String           @db.VarChar(300)
+  totalPages       Int
+  perPagePrice     Float
+  status           Boolean          @default(true)
+  pdfS3Key         String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime
+  PjIndexDirectory PjIndexDirectory @relation(fields: [directoryId], references: [id], onDelete: Cascade)
+
+  @@index([directoryId])
+}
+
+model PjIndexDirectory {
+  id             String           @id
+  name           String           @db.VarChar(500)
+  caseNo         String?
+  status         Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  PjIndexArticle PjIndexArticle[]
+}
+
+model Plan {
+  id                  String             @id
+  name                String
+  priceCents          Int?
+  albumsMax           Int                @default(1)
+  storageGbMax        Int
+  bandwidthGbMonthMax Int
+  isActive            Boolean            @default(true)
+  badge               String?
+  description         String?
+  features            Json?
+  photosMax           Int?
+  priceYearlyCents    Int?
+  qrCodesMax          Int?
+  sortOrder           Int                @default(0)
+  swapLimitMonth      Int?
+  albumType           String             @default("PRIVATE")
+  viewsMax            Int?
+  viewsOverageCents   Int?
+  User                User[]
+  UserSubscription    UserSubscription[]
+
+  @@index([albumType])
+}
+
+model Platform {
+  id                 String               @id
+  name               String
+  slug               String               @unique
+  description        String?
+  icon               String?
+  color              String?
+  baseUrl            String?
+  isActive           Boolean              @default(true)
+  sortOrder          Int                  @default(0)
+  settings           Json?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  UserPlatformAccess UserPlatformAccess[]
+
+  @@index([isActive])
+  @@index([slug])
+}
+
+model PlatformAlert {
+  id          String    @id
+  platforms   String[]  @default([])
+  type        String
+  title       String
+  message     String
+  priority    String    @default("normal")
+  targetUsers String    @default("all")
+  isActive    Boolean   @default(true)
+  startsAt    DateTime  @default(now())
+  expiresAt   DateTime?
+  dismissible Boolean   @default(true)
+  actionUrl   String?
+  actionText  String?
+  metadata    Json?
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+
+  @@index([expiresAt])
+  @@index([isActive])
+  @@index([startsAt])
+}
+
+model QrBundle {
+  id              String   @id
+  userId          String
+  albumId         String
+  quantity        Int      @default(25)
+  amountPaidCents Int
+  stripeSessionId String?  @unique
+  paymentIntentId String?
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  Album           Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([albumId])
+  @@index([status])
+  @@index([userId])
+}
+
+model ReviewImage {
+  id         String     @id
+  reviewId   String
+  imageUrl   String
+  order      Int        @default(0)
+  BookReview BookReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+}
+
+model ReviewLike {
+  id         String     @id
+  reviewId   String
+  userId     String
+  createdAt  DateTime   @default(now())
+  BookReview BookReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+  @@index([userId])
+}
+
+model ReviewTag {
+  id         String     @id
+  reviewId   String
+  tag        String
+  BookReview BookReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@index([tag])
+}
+
+model SupportTicket {
+  id         String    @id
+  userId     String?
+  name       String
+  email      String
+  subject    String
+  category   String    @default("general")
+  message    String
+  status     String    @default("open")
+  priority   String    @default("normal")
+  adminNotes String?
+  resolvedAt DateTime?
+  resolvedBy String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime
+  User       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([priority])
+  @@index([status])
+}
+
+model SystemLog {
+  id         String   @id
+  platform   String
+  level      String
+  message    String
+  source     String?
+  userId     String?
+  requestId  String?
+  metadata   Json?
+  stackTrace String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([level])
+  @@index([platform])
+}
+
+model Tag {
+  id        String     @id
+  name      String
+  slug      String     @unique
+  createdAt DateTime   @default(now())
+  AlbumTag  AlbumTag[]
+}
+
+model Transaction {
+  id          String   @id
+  authorId    String?
+  type        String
+  amount      Decimal
+  status      String   @default("PENDING")
+  orderId     String?
+  payoutId    String?
+  promotionId String?
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  userId      String?
+  Author      Author?  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  User        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([type])
+  @@index([userId])
+}
+
+model UsageCounter {
+  id                  String @id
+  userId              String
+  monthYyyymm         String
+  storageBytesTotal   BigInt @default(0)
+  bandwidthBytesMonth BigInt @default(0)
+  photoSwapsMonth     Int    @default(0)
+  viewsMonth          Int    @default(0)
+  albumType           String @default("PRIVATE")
+  User                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, monthYyyymm, albumType])
+  @@index([albumType])
+  @@index([monthYyyymm])
+}
+
+model UserLibrary {
+  id           String   @id
+  userId       String
+  bookId       String
+  orderId      String
+  purchaseDate DateTime @default(now())
+  createdAt    DateTime @default(now())
+  Book         Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  Order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([bookId])
+  @@index([userId])
+}
+
+model UserPlatformAccess {
+  id          String    @id
+  userId      String
+  platformId  String
+  role        String    @default("user")
+  permissions Json?
+  grantedBy   String?
+  grantedAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  Platform    Platform  @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platformId])
+  @@index([isActive])
+  @@index([platformId])
+  @@index([role])
+  @@index([userId])
+}
+
+model UserSubscription {
+  id                   String    @id
+  userId               String
+  planId               String
+  stripeSubscriptionId String    @unique
+  stripeCustomerId     String
+  albumType            String
+  status               String    @default("active")
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean   @default(false)
+  canceledAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime
+  Plan                 Plan      @relation(fields: [planId], references: [id])
+  User                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([albumType])
+  @@index([status])
+  @@index([stripeSubscriptionId])
+  @@index([userId, albumType, status])
+  @@index([userId])
+}
+
+model banners {
+  id              String   @id
+  title           String
+  description     String?
+  imageUrl        String?
+  ctaText         String?
+  ctaLink         String?
+  location        String   @default("purchases")
+  targetPlan      String   @default("free")
+  backgroundColor String   @default("#0891b2")
+  textColor       String   @default("#ffffff")
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+
+  @@index([displayOrder])
+  @@index([location, targetPlan, isActive])
+}
+
+enum AuthorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BookStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CONFIRMED
+  EXPIRED
+  REQUIRES_ACTION
+}
