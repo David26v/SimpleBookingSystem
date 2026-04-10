@@ -13,8 +13,8 @@ model User {
   email     String    @unique
   avatarUrl String?
   createdAt DateTime  @default(now())
-  Booking   Booking[]
-  Listing   Listing[]
+  bookings  Booking[]
+  listings  Listing[]
 }
 
 model Booking {
@@ -27,8 +27,8 @@ model Booking {
   listingId  String
   userId     String
   createdAt  DateTime @default(now())
-  Listing    Listing  @relation(fields: [listingId], references: [id])
-  User       User     @relation(fields: [userId], references: [id])
+  listing    Listing  @relation(fields: [listingId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 
   @@index([listingId, checkIn, checkOut])
 }
@@ -43,6 +43,6 @@ model Listing {
   maxGuests     Int       @default(4)
   hostId        String
   createdAt     DateTime  @default(now())
-  Booking       Booking[]
-  User          User      @relation(fields: [hostId], references: [id])
+  bookings      Booking[]
+  host          User      @relation(fields: [hostId], references: [id])
 }
