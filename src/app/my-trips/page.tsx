@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Image from "next/image";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +26,23 @@ export default async function MyTripsPage() {
 
   const bookings = await prisma.booking.findMany({
     where: { userId: user.id },
-    include: { listing: { include: { host: true } } },
+    select: {
+      id: true,
+      checkIn: true,
+      checkOut: true,
+      guests: true,
+      totalPrice: true,
+      status: true,
+      listing: {
+        select: {
+          id: true,
+          title: true,
+          imageUrl: true,
+          location: true,
+          host: { select: { name: true } },
+        },
+      },
+    },
     orderBy: { checkIn: "desc" },
   });
 
@@ -128,11 +145,13 @@ function BookingCard({
         variant === "past" ? "opacity-75" : ""
       }`}
     >
-      <Link href={`/listings/${booking.listing.id}`} className="w-28 h-auto overflow-hidden flex-shrink-0">
-        <img
+      <Link href={`/listings/${booking.listing.id}`} className="relative w-28 h-auto overflow-hidden flex-shrink-0">
+        <Image
           src={booking.listing.imageUrl}
           alt={booking.listing.title}
-          className="w-full h-full object-cover"
+          fill
+          sizes="112px"
+          className="object-cover"
         />
       </Link>
       <CardContent className="flex-1 min-w-0 py-3 px-4">

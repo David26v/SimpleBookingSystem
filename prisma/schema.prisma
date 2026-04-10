@@ -32,6 +32,8 @@ model Booking {
   user       User     @relation(fields: [userId], references: [id])
 
   @@index([listingId, checkIn, checkOut])
+  @@index([userId])
+  @@index([status])
 }
 
 model Listing {
@@ -46,4 +48,8 @@ model Listing {
   createdAt     DateTime  @default(now())
   bookings      Booking[]
   host          User      @relation(fields: [hostId], references: [id])
+
+  @@index([hostId])
+  @@index([location])
+  @@index([createdAt])
 }

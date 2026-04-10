@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { BookingPanel } from "@/components/BookingPanel";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,7 @@ import {
   Check,
 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function ListingPage({
   params,
@@ -65,39 +66,50 @@ export default async function ListingPage({
 
       {/* Image gallery */}
       <div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden mb-10 h-[400px]">
-        <div className="col-span-2 row-span-2">
-          <img
+        <div className="col-span-2 row-span-2 relative">
+          <Image
             src={listing.imageUrl}
             alt={listing.title}
-            className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
-          />
-        </div>
-        <div className="col-span-1 row-span-1">
-          <img
-            src={`${listing.imageUrl}&crop=left`}
-            alt={listing.title}
-            className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
-          />
-        </div>
-        <div className="col-span-1 row-span-1">
-          <img
-            src={`${listing.imageUrl}&crop=top`}
-            alt={listing.title}
-            className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
-          />
-        </div>
-        <div className="col-span-1 row-span-1">
-          <img
-            src={`${listing.imageUrl}&crop=right`}
-            alt={listing.title}
-            className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
+            fill
+            sizes="50vw"
+            priority
+            className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
         </div>
         <div className="col-span-1 row-span-1 relative">
-          <img
+          <Image
+            src={`${listing.imageUrl}&crop=left`}
+            alt={listing.title}
+            fill
+            sizes="25vw"
+            className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
+          />
+        </div>
+        <div className="col-span-1 row-span-1 relative">
+          <Image
+            src={`${listing.imageUrl}&crop=top`}
+            alt={listing.title}
+            fill
+            sizes="25vw"
+            className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
+          />
+        </div>
+        <div className="col-span-1 row-span-1 relative">
+          <Image
+            src={`${listing.imageUrl}&crop=right`}
+            alt={listing.title}
+            fill
+            sizes="25vw"
+            className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
+          />
+        </div>
+        <div className="col-span-1 row-span-1 relative">
+          <Image
             src={`${listing.imageUrl}&crop=bottom`}
             alt={listing.title}
-            className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
+            fill
+            sizes="25vw"
+            className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
           <Badge
             variant="secondary"

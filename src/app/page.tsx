@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Search } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function Home({
   searchParams,
@@ -18,8 +18,17 @@ export default async function Home({
     where: location
       ? { location: { contains: location, mode: "insensitive" } }
       : undefined,
-    include: { host: true },
+    select: {
+      id: true,
+      title: true,
+      imageUrl: true,
+      pricePerNight: true,
+      location: true,
+      maxGuests: true,
+      host: { select: { id: true, name: true, avatarUrl: true } },
+    },
     orderBy: { createdAt: "desc" },
+    take: 24,
   });
 
   return (

@@ -1,20 +1,32 @@
 import Link from "next/link";
-import type { Listing, User } from "@prisma/client";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users } from "lucide-react";
 
-type ListingWithHost = Listing & { host: User };
+type ListingCardProps = {
+  listing: {
+    id: string;
+    title: string;
+    imageUrl: string;
+    pricePerNight: number;
+    location: string;
+    maxGuests: number;
+    host: { id: string; name: string; avatarUrl: string | null };
+  };
+};
 
-export function ListingCard({ listing }: { listing: ListingWithHost }) {
+export function ListingCard({ listing }: ListingCardProps) {
   return (
     <Link href={`/listings/${listing.id}`} className="group block">
       <Card className="overflow-hidden border-0 ring-0 shadow-none bg-transparent py-0 gap-0">
         <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3">
-          <img
+          <Image
             src={listing.imageUrl}
             alt={listing.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <Badge
             variant="secondary"
