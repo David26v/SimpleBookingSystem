@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { ListingCard } from "@/components/ListingCard";
 import { SearchBar } from "@/components/SearchBar";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Search } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -42,50 +45,32 @@ export default async function Home({
             <h2 className="text-2xl font-bold">
               {location ? `Stays in ${location}` : "Popular stays"}
             </h2>
-            <p className="text-[var(--color-muted)] text-sm mt-1">
+            <p className="text-muted-foreground text-sm mt-1">
               {listings.length} propert{listings.length === 1 ? "y" : "ies"}{" "}
               {location ? "found" : "available"}
             </p>
           </div>
           {location && (
-            <a
-              href="/"
-              className="text-sm font-medium text-[var(--color-primary)] hover:underline"
-            >
+            <Button variant="link" nativeButton={false} render={<Link href="/" />}>
               Clear filter
-            </a>
+            </Button>
           )}
         </div>
 
         {listings.length === 0 ? (
           <div className="text-center py-20">
-            <svg
-              className="mx-auto mb-4 text-[var(--color-border)]"
-              width="64"
-              height="64"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+            <Search className="mx-auto mb-4 text-muted-foreground/40 size-16" strokeWidth={1.5} />
             <h3 className="text-xl font-semibold mb-2">No stays found</h3>
-            <p className="text-[var(--color-muted)] mb-6">
+            <p className="text-muted-foreground mb-6">
               No properties match &quot;{location}&quot;. Try another location.
             </p>
-            <a
-              href="/"
-              className="inline-block px-6 py-3 rounded-xl text-white font-semibold text-sm"
-              style={{
-                background: "linear-gradient(to right, #e61e4d, #bd1e59)",
-              }}
+            <Button
+              size="lg"
+              className="rounded-xl px-6 h-11"
+              nativeButton={false} render={<Link href="/" />}
             >
               View all stays
-            </a>
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">

@@ -9,8 +9,6 @@
   --color-primary-dark: #d70466;
   --color-bg: #ffffff;
   --color-fg: #222222;
-  --color-muted: #717171;
-  --color-border: #dddddd;
   --color-surface: #f7f7f7;
   --color-success: #008a05;
   --color-success-bg: #f0fff0;
@@ -20,8 +18,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.637 0.237 15.34);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);

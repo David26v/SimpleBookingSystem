@@ -1,43 +1,52 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { CheckCircle2, XCircle, AlertTriangle, Loader2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function BookingSuccessPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ session_id?: string }>;
-}) {
-  const { session_id } = await searchParams;
+function LoadingFallback() {
+  return (
+    <div className="max-w-lg mx-auto px-6 py-20 text-center">
+      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-secondary mb-6">
+        <Loader2 className="size-10 text-muted-foreground animate-spin" />
+      </div>
+      <h1 className="text-2xl font-bold mb-2">Processing your booking...</h1>
+      <p className="text-muted-foreground">
+        Please wait while we confirm your payment.
+      </p>
+    </div>
+  );
+}
 
-  if (!session_id) redirect("/");
-
-  // Retrieve the Stripe checkout session
-  const session = await stripe.checkout.sessions.retrieve(session_id);
+async function BookingResult({ sessionId }: { sessionId: string }) {
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
 
   if (session.payment_status !== "paid") {
     return (
       <div className="max-w-lg mx-auto px-6 py-20 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
+          <XCircle className="size-8 text-destructive" />
         </div>
         <h1 className="text-2xl font-bold mb-2">Payment not completed</h1>
-        <p className="text-[var(--color-muted)] mb-6">
+        <p className="text-muted-foreground mb-6">
           Your payment was not processed. Please try again.
         </p>
-        <Link
-          href="/"
-          className="inline-block px-6 py-3 rounded-xl text-white font-semibold text-sm"
-          style={{ background: "linear-gradient(to right, #e61e4d, #bd1e59)" }}
+        <Button
+          size="lg"
+          className="rounded-xl px-6 h-11"
+          nativeButton={false}
+          render={<Link href="/" />}
         >
           Back to listings
-        </Link>
+        </Button>
       </div>
     );
   }
@@ -45,10 +54,8 @@ export default async function BookingSuccessPage({
   const { listingId, checkIn, checkOut, guests, totalPrice } =
     session.metadata!;
 
-  // Atomically create the booking (prevent double-booking even after payment)
   let booking;
   try {
-    // Get or create user
     let user = await prisma.user.findFirst({
       where: { email: "david@example.com" },
     });
@@ -58,7 +65,6 @@ export default async function BookingSuccessPage({
       });
     }
 
-    // Check if booking already exists for this session (idempotency)
     const existingBooking = await prisma.booking.findFirst({
       where: {
         listingId,
@@ -73,7 +79,6 @@ export default async function BookingSuccessPage({
     if (existingBooking) {
       booking = existingBooking;
     } else {
-      // Create booking inside a serializable transaction
       booking = await prisma.$transaction(
         async (tx) => {
           const overlapping = await tx.booking.findMany({
@@ -112,29 +117,24 @@ export default async function BookingSuccessPage({
       return (
         <div className="max-w-lg mx-auto px-6 py-20 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 mb-4">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
+            <AlertTriangle className="size-8 text-yellow-600" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Dates no longer available</h1>
-          <p className="text-[var(--color-muted)] mb-2">
+          <p className="text-muted-foreground mb-2">
             Someone booked these dates just before you. Your payment has been
             processed but will be refunded automatically.
           </p>
-          <p className="text-sm text-[var(--color-muted)] mb-6">
-            Stripe session: {session_id.slice(0, 20)}...
+          <p className="text-sm text-muted-foreground mb-6">
+            Stripe session: {sessionId.slice(0, 20)}...
           </p>
-          <Link
-            href="/"
-            className="inline-block px-6 py-3 rounded-xl text-white font-semibold text-sm"
-            style={{
-              background: "linear-gradient(to right, #e61e4d, #bd1e59)",
-            }}
+          <Button
+            size="lg"
+            className="rounded-xl px-6 h-11"
+            nativeButton={false}
+            render={<Link href="/" />}
           >
             Find other stays
-          </Link>
+          </Button>
         </div>
       );
     }
@@ -150,18 +150,16 @@ export default async function BookingSuccessPage({
     <div className="max-w-lg mx-auto px-6 py-16 text-center">
       {/* Success animation */}
       <div className="animate-success inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#008a05" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
+        <CheckCircle2 className="size-10 text-green-600" />
       </div>
 
       <h1 className="text-3xl font-bold mb-2">Booking confirmed!</h1>
-      <p className="text-[var(--color-muted)] mb-8">
+      <p className="text-muted-foreground mb-8">
         Payment successful. Your reservation is all set.
       </p>
 
       {/* Booking card */}
-      <div className="bg-white border border-[var(--color-border)] rounded-2xl overflow-hidden text-left mb-8 shadow-sm">
+      <Card className="overflow-hidden text-left mb-8 py-0 gap-0">
         <div className="aspect-[3/1] overflow-hidden">
           <img
             src={booking.listing.imageUrl}
@@ -169,23 +167,23 @@ export default async function BookingSuccessPage({
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="p-5 space-y-3">
+        <CardContent className="space-y-3 pt-5">
           <h2 className="text-lg font-bold">{booking.listing.title}</h2>
-          <p className="text-sm text-[var(--color-muted)]">
+          <p className="text-sm text-muted-foreground">
             {booking.listing.location}
           </p>
 
           <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="bg-[var(--color-surface)] rounded-xl p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)]">
+            <div className="bg-secondary rounded-xl p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Check-in
               </p>
               <p className="text-sm font-semibold mt-0.5">
                 {format(new Date(checkIn), "EEE, MMM d")}
               </p>
             </div>
-            <div className="bg-[var(--color-surface)] rounded-xl p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)]">
+            <div className="bg-secondary rounded-xl p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Check-out
               </p>
               <p className="text-sm font-semibold mt-0.5">
@@ -194,40 +192,60 @@ export default async function BookingSuccessPage({
             </div>
           </div>
 
-          <div className="flex justify-between items-center pt-3 border-t border-[var(--color-border)]">
+          <Separator />
+
+          <div className="flex justify-between items-center">
             <div>
-              <p className="text-xs text-[var(--color-muted)]">
+              <p className="text-xs text-muted-foreground">
                 {nights} night{nights > 1 ? "s" : ""} &middot;{" "}
                 {guests} guest{parseInt(guests) > 1 ? "s" : ""}
               </p>
-              <p className="text-xs text-[var(--color-muted)] font-mono mt-0.5">
+              <Badge variant="outline" className="mt-1 font-mono text-[10px]">
                 ID: {booking.id.slice(0, 12)}
-              </p>
+              </Badge>
             </div>
             <p className="text-xl font-bold">
               ${parseFloat(totalPrice).toLocaleString()}
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <div className="flex gap-3">
-        <Link
-          href="/my-trips"
-          className="flex-1 py-3.5 rounded-xl text-white font-semibold text-sm text-center hover:opacity-90 transition-opacity"
-          style={{
-            background: "linear-gradient(to right, #e61e4d, #bd1e59)",
-          }}
+        <Button
+          size="lg"
+          className="flex-1 rounded-xl h-11"
+          nativeButton={false}
+          render={<Link href="/my-trips" />}
         >
           View My Trips
-        </Link>
-        <Link
-          href="/"
-          className="flex-1 py-3.5 rounded-xl border border-[var(--color-border)] font-semibold text-sm text-center hover:bg-[var(--color-surface)] transition-colors"
+        </Button>
+        <Button
+          variant="outline"
+          size="lg"
+          className="flex-1 rounded-xl h-11"
+          nativeButton={false}
+          render={<Link href="/" />}
         >
           Back to Home
-        </Link>
+        </Button>
       </div>
     </div>
+  );
+}
+
+export default async function BookingSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>;
+}) {
+  const { session_id } = await searchParams;
+
+  if (!session_id) redirect("/");
+
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <BookingResult sessionId={session_id} />
+    </Suspense>
   );
 }
