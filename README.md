@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Simple Booking System
+
+An Airbnb-style booking platform built with Next.js, featuring calendar-based reservations, double-booking prevention, and real Stripe payment integration.
+
+**Live Demo:** [simple-booking-system-orcin.vercel.app](https://simple-booking-system-orcin.vercel.app)
+
+## Features
+
+- **Browse Listings** - Search and filter properties by location
+- **Calendar Booking** - Date picker with real-time availability (booked dates are blocked)
+- **Double-Booking Prevention** - Atomic database transactions with serializable isolation prevent overlapping reservations
+- **Stripe Payments** - Real checkout flow using Stripe test mode
+- **My Trips** - View upcoming/past bookings with cancel functionality
+- **Responsive UI** - Built with shadcn/ui components and Tailwind CSS
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router)
+- **Database:** PostgreSQL with Prisma ORM
+- **Payments:** Stripe Checkout
+- **UI:** shadcn/ui, Tailwind CSS v4, Lucide Icons
+- **Deployment:** Vercel
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 20+
+- PostgreSQL database
+
+### Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/David26v/SimpleBookingSystem.git
+   cd SimpleBookingSystem
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env` file with the following variables:
+   ```env
+   BOOKING_DATABASE_URL="your-postgresql-connection-string"
+   STRIPE_SECRET_KEY="sk_test_..."
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
+   ```
+
+4. Push the schema to your database:
+   ```bash
+   npx prisma db push
+   ```
+
+5. Seed the database:
+   ```bash
+   npm run seed
+   ```
+
+6. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+## Project Structure
+
+```
+src/
+  app/
+    page.tsx                    # Home page with listings grid
+    listings/[id]/page.tsx      # Listing detail with booking panel
+    book/[id]/page.tsx          # Confirm & pay page
+    booking/success/page.tsx    # Post-payment success page
+    my-trips/page.tsx           # User's bookings with cancel
+    api/
+      checkout/route.ts         # Stripe session creation
+      bookings/route.ts         # Booking CRUD with double-book prevention
+      listings/route.ts         # Listings API
+  components/
+    BookingPanel.tsx             # Date picker + guest selector
+    ListingCard.tsx              # Listing grid card
+    SearchBar.tsx                # Location search with dropdown
+  lib/
+    prisma.ts                   # Prisma client singleton
+    stripe.ts                   # Stripe client
+prisma/
+  schema.prisma                 # Database schema
+  seed.ts                       # Sample data seeder
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Performance Optimizations
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **ISR Caching** - Public pages revalidate every 60 seconds
+- **Database Indexes** - On frequently queried columns (userId, status, location, hostId, createdAt)
+- **Selective Queries** - Only fetch needed fields with Prisma `select`
+- **Image Optimization** - next/image with automatic WebP conversion and lazy loading
+- **Loading Skeletons** - Instant visual feedback while pages load
+- **Response Compression** - Enabled in Next.js config
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment
 
-## Learn More
+The app is deployed on Vercel. Push to `main` triggers automatic deployment.
 
-To learn more about Next.js, take a look at the following resources:
+**Build command:** `prisma generate && next build`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Environment variables required on Vercel:**
+- `BOOKING_DATABASE_URL`
+- `STRIPE_SECRET_KEY`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
