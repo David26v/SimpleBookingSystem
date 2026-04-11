@@ -6,12 +6,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "StayBook - Find Your Perfect Stay",
   description: "Book unique places to stay around the Philippines",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
 };
 
 export default function RootLayout({
@@ -22,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body>
+        {/* Desktop header */}
         <header className="border-b border-border sticky top-0 bg-background/95 backdrop-blur-sm z-50">
           <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
@@ -33,7 +36,7 @@ export default function RootLayout({
                 Stay<span className="text-primary">Book</span>
               </span>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4">
               <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/my-trips" />}>
                 My Trips
               </Button>
@@ -47,7 +50,11 @@ export default function RootLayout({
             </div>
           </nav>
         </header>
-        <main>{children}</main>
+
+        <main className="pb-20 md:pb-0">{children}</main>
+
+        {/* Mobile bottom navigation */}
+        <MobileBottomNav />
       </body>
     </html>
   );

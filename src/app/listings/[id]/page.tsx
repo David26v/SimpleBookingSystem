@@ -56,27 +56,27 @@ export default async function ListingPage({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-8">
       {/* Title */}
-      <h1 className="text-2xl font-bold mb-1">{listing.title}</h1>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+      <h1 className="text-xl md:text-2xl font-bold mb-1">{listing.title}</h1>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 md:mb-6">
         <MapPin className="size-3.5" />
         {listing.location}
       </div>
 
-      {/* Image gallery */}
-      <div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden mb-10 h-[400px]">
-        <div className="col-span-2 row-span-2 relative">
+      {/* Image gallery - single image on mobile, grid on desktop */}
+      <div className="relative aspect-[4/3] md:aspect-auto md:grid md:grid-cols-4 md:grid-rows-2 gap-2 rounded-2xl overflow-hidden mb-6 md:mb-10 md:h-[400px]">
+        <div className="md:col-span-2 md:row-span-2 relative h-full">
           <Image
             src={listing.imageUrl}
             alt={listing.title}
             fill
-            sizes="50vw"
+            sizes="(max-width: 768px) 100vw, 50vw"
             priority
-            className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
+            className="object-cover"
           />
         </div>
-        <div className="col-span-1 row-span-1 relative">
+        <div className="hidden md:block col-span-1 row-span-1 relative">
           <Image
             src={`${listing.imageUrl}&crop=left`}
             alt={listing.title}
@@ -85,7 +85,7 @@ export default async function ListingPage({
             className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
         </div>
-        <div className="col-span-1 row-span-1 relative">
+        <div className="hidden md:block col-span-1 row-span-1 relative">
           <Image
             src={`${listing.imageUrl}&crop=top`}
             alt={listing.title}
@@ -94,7 +94,7 @@ export default async function ListingPage({
             className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
         </div>
-        <div className="col-span-1 row-span-1 relative">
+        <div className="hidden md:block col-span-1 row-span-1 relative">
           <Image
             src={`${listing.imageUrl}&crop=right`}
             alt={listing.title}
@@ -103,7 +103,7 @@ export default async function ListingPage({
             className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
         </div>
-        <div className="col-span-1 row-span-1 relative">
+        <div className="hidden md:block col-span-1 row-span-1 relative">
           <Image
             src={`${listing.imageUrl}&crop=bottom`}
             alt={listing.title}
@@ -120,7 +120,7 @@ export default async function ListingPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
         {/* Left: Listing details */}
         <div className="lg:col-span-2">
           {/* Host bar */}

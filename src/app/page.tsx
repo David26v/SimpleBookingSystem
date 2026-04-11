@@ -35,11 +35,11 @@ export default async function Home({
     <div>
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-[#bd1e59] to-[#92174d] text-white">
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <h1 className="text-4xl font-bold mb-3 tracking-tight">
+        <div className="max-w-7xl mx-auto px-4 py-10 md:px-6 md:py-16">
+          <h1 className="text-2xl md:text-4xl font-bold mb-2 md:mb-3 tracking-tight">
             Find your next getaway
           </h1>
-          <p className="text-lg text-white/80 mb-8 max-w-lg">
+          <p className="text-sm md:text-lg text-white/80 mb-6 md:mb-8 max-w-lg">
             Discover and book unique stays across the Philippines. From
             beachfront villas to mountain retreats.
           </p>
@@ -48,10 +48,10 @@ export default async function Home({
       </div>
 
       {/* Listings Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex items-center justify-between mb-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-10">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
           <div>
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-xl md:text-2xl font-bold">
               {location ? `Stays in ${location}` : "Popular stays"}
             </h2>
             <p className="text-muted-foreground text-sm mt-1">
