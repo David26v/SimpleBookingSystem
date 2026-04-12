@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { Geist } from "next/font/google";
@@ -10,10 +10,15 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "StayBook - Find Your Perfect Stay",
   description: "Book unique places to stay around the Philippines",
-  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
 };
 
 export default function RootLayout({
