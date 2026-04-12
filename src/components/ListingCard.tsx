@@ -25,12 +25,13 @@ export function ListingCard({ listing }: ListingCardProps) {
             src={listing.imageUrl}
             alt={listing.title}
             fill
+            loading="lazy"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover will-change-transform group-hover:scale-105 transition-transform duration-500"
           />
           <Badge
             variant="secondary"
-            className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm shadow-sm text-foreground border-0 rounded-full px-2.5 h-6"
+            className="absolute top-3 right-3 bg-background/95 shadow-sm text-foreground border-0 rounded-full px-2.5 h-6"
           >
             ${listing.pricePerNight.toLocaleString()}/night
           </Badge>

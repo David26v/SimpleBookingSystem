@@ -81,6 +81,7 @@ export default async function ListingPage({
             src={`${listing.imageUrl}&crop=left`}
             alt={listing.title}
             fill
+            loading="lazy"
             sizes="25vw"
             className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
@@ -90,6 +91,7 @@ export default async function ListingPage({
             src={`${listing.imageUrl}&crop=top`}
             alt={listing.title}
             fill
+            loading="lazy"
             sizes="25vw"
             className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
@@ -99,6 +101,7 @@ export default async function ListingPage({
             src={`${listing.imageUrl}&crop=right`}
             alt={listing.title}
             fill
+            loading="lazy"
             sizes="25vw"
             className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
@@ -108,6 +111,7 @@ export default async function ListingPage({
             src={`${listing.imageUrl}&crop=bottom`}
             alt={listing.title}
             fill
+            loading="lazy"
             sizes="25vw"
             className="object-cover hover:opacity-90 transition-opacity cursor-pointer"
           />
