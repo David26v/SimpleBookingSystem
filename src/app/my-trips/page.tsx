@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
 import { CancelButton } from "./cancel-button";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function MyTripsPage() {
   const user = await prisma.user.findFirst({

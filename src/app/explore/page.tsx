@@ -5,7 +5,7 @@ import { MapPin, Search, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 const destinations = [
   { name: "Boracay", emoji: "🏖️", description: "White sand beaches" },

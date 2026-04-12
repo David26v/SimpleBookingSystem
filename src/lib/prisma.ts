@@ -5,7 +5,10 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 if (!globalForPrisma.prisma) {
-  globalForPrisma.prisma = new PrismaClient();
+  globalForPrisma.prisma = new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+    datasourceUrl: process.env.BOOKING_DATABASE_URL,
+  });
 }
 
 export const prisma = globalForPrisma.prisma;

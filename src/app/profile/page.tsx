@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-export const revalidate = 60;
+export const revalidate = 120;
 
 export default async function ProfilePage() {
   const user = await prisma.user.findFirst({
