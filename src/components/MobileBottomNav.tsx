@@ -6,7 +6,7 @@ import { Home, Search, CalendarDays, User } from "lucide-react";
 
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/?focus=search", icon: Search, label: "Explore" },
+  { href: "/explore", icon: Search, label: "Explore" },
   { href: "/my-trips", icon: CalendarDays, label: "Trips" },
   { href: "/profile", icon: User, label: "Profile" },
 ];
